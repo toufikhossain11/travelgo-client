@@ -1,4 +1,5 @@
 
+
 import BlogHighlights from "../components/home/BlogHighlights";
 import CTABanner from "../components/home/CTABanner";
 import Hero from "../components/home/Hero";
@@ -21,6 +22,7 @@ export default function HomePage() {
       <BlogHighlights />
       <Newsletter />
       <CTABanner />
+      {/* <AuthLayout/> */}
     </main>
   );
 }

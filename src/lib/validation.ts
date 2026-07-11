@@ -6,3 +6,12 @@ export function isValidEmail(value: string): boolean {
 export function isStrongPassword(value: string): boolean {
   return /^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(value);
 }
+
+export function isValidUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
