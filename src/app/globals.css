@@ -1,0 +1,32 @@
+@import "tailwindcss";
+@import "@heroui/styles";
+
+@theme {
+  --color-brand-emerald: #10b981;
+  --color-brand-emerald-dark: #0b815a;
+  --color-brand-sky: #0ea5e9;
+  --color-brand-sky-dark: #0369a1;
+  --color-brand-amber: #f59e0b;
+  --color-brand-amber-dark: #b45309;
+}
+
+body {
+  font-family: var(--font-body), ui-sans-serif, sans-serif;
+  background-color: #f8fafc;
+  color: #334155;
+}
+
+.font-display {
+  font-family: var(--font-display), ui-sans-serif, sans-serif;
+}
+
+.font-mono-travel {
+  font-family: var(--font-mono-travel), ui-monospace, monospace;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
