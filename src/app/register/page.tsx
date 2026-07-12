@@ -9,6 +9,7 @@ import { FaGoogle } from "react-icons/fa6";
 import AuthLayout from "@/src/components/auth/AuthLayout";
 import AuthField from "@/src/components/auth/AuthField";
 import { isValidEmail, isValidUrl, isStrongPassword } from "@/src/lib/validation";
+import { authClient } from "@/src/lib/auth-client";
 
 interface FormErrors {
   name?: string;
@@ -50,15 +51,29 @@ export default function RegisterPage() {
 
     setLoading(true);
     setFormError(null);
+
+    const { data, error } = await authClient.signUp.email({
+    email: "email@domain.com", // required
+    name: "Test User", // required
+    password: "password1234", // required
+    imageUrl: "https://example.com/photo.jpg", // optional
+    // username: "test",
+    // displayUsername: "Test User123",
+});
+
+
     // TODO: replace with your real signup call — body: { name, email, imageUrl, password }
     await new Promise((resolve) => setTimeout(resolve, 900));
     setLoading(false);
     router.push("/login");
   }
 
-  function handleGoogleAuth() {
-    // TODO: wire up real Google OAuth here
-  }
+ function handleGoogleAuth() {
+  authClient.signIn.social({
+    provider: "google",
+    callbackURL: "/",
+  });
+}
 
   return (
     <AuthLayout heading="Create your account" subheading="Save trips, track bookings and get personalized deals.">

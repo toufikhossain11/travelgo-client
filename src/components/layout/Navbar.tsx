@@ -39,9 +39,11 @@ export default function Navbar() {
           <Link href="/login" className="px-4 py-2 text-[15px] font-medium text-slate-600 hover:text-slate-900">
             Log in
           </Link>
-          <Button variant="primary" className="rounded-full">
-            Sign up free
-          </Button>
+          <Link href="/register" className="px-4 py-2">
+            <Button variant="primary" className="rounded-full">
+              Sign up free
+            </Button>
+          </Link>
         </div>
 
         <button
