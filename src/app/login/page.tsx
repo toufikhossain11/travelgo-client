@@ -9,6 +9,8 @@ import { FaGoogle } from "react-icons/fa6";
 import AuthLayout from "@/src/components/auth/AuthLayout";
 import AuthField from "@/src/components/auth/AuthField";
 import { isValidEmail } from "@/src/lib/validation";
+import { authClient } from "@/src/lib/auth-client";
+import toast from "react-hot-toast";
 
 interface FormErrors {
   email?: string;
@@ -36,22 +38,29 @@ export default function LoginPage() {
   }
 
   async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    if (!validate()) return;
+  e.preventDefault();
+  if (!validate()) return;
 
-    setLoading(true);
-    setFormError(null);
-    // TODO: replace with your real login call, e.g. POST /api/auth/login
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    setLoading(false);
-    router.push("/");
+  setLoading(true);
+  setFormError(null);
+
+  const { error } = await authClient.signIn.email({ email, password });
+
+  setLoading(false);
+
+  if (error) {
+    toast.error(error.message ?? "Invalid email or password.");
+    setFormError(error.message ?? "Invalid email or password.");
+    return;
   }
 
-  function handleGoogleAuth() {
-    // TODO: wire up real Google OAuth here, e.g.:
-    // - NextAuth.js: signIn("google")
-    // - Firebase Auth: signInWithPopup(auth, new GoogleAuthProvider())
-  }
+  toast.success("Logged in successfully!");
+  router.push("/");
+}
+
+function handleGoogleAuth() {
+  authClient.signIn.social({ provider: "google", callbackURL: "/" });
+}
 
   return (
     <AuthLayout heading="Welcome back" subheading="Log in to manage your bookings and saved trips.">

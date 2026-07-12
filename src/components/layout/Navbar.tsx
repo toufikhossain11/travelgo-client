@@ -2,9 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@heroui/react";
-import { FiCompass, FiMenu, FiX } from "react-icons/fi";
+import { FiChevronDown, FiCompass, FiLogOut, FiMenu, FiX } from "react-icons/fi";
+import toast from "react-hot-toast";
+import { authClient } from "@/src/lib/auth-client";
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -15,7 +19,20 @@ const navLinks = [
 ];
 
 export default function Navbar() {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const { data: session, isPending } = authClient.useSession();
+  const user = session?.user;
+
+  async function handleLogout() {
+    await authClient.signOut();
+    setProfileOpen(false);
+    setOpen(false);
+    toast.success("Logged out successfully");
+    router.push("/");
+    router.refresh();
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-slate-100 bg-white/90 backdrop-blur">
@@ -36,14 +53,77 @@ export default function Navbar() {
         </nav>
 
         <div className="hidden items-center gap-3 lg:flex">
-          <Link href="/login" className="px-4 py-2 text-[15px] font-medium text-slate-600 hover:text-slate-900">
-            Log in
-          </Link>
-          <Link href="/register" className="px-4 py-2">
-            <Button variant="primary" className="rounded-full">
-              Sign up free
-            </Button>
-          </Link>
+          {isPending ? (
+            <div className="h-9 w-9 animate-pulse rounded-full bg-slate-200" />
+          ) : user ? (
+            <div className="relative">
+              <button
+                onClick={() => setProfileOpen((v) => !v)}
+                className="flex items-center gap-2 rounded-full py-1 pl-1 pr-3 transition hover:bg-slate-50"
+              >
+                {user.image ? (
+                  <Image
+                    src={user.image}
+                    alt={user.name ?? "Profile"}
+                    width={32}
+                    height={32}
+                    className="h-8 w-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-emerald text-sm font-semibold text-white">
+                    {user.name?.charAt(0).toUpperCase() ?? "U"}
+                  </span>
+                )}
+                <span className="max-w-[120px] truncate text-sm font-medium text-slate-700">{user.name}</span>
+                <FiChevronDown className={`h-4 w-4 text-slate-400 transition ${profileOpen ? "rotate-180" : ""}`} />
+              </button>
+
+              <AnimatePresence>
+                {profileOpen && (
+                  <>
+                    {/* backdrop to close on outside click */}
+                    <div className="fixed inset-0 z-10" onClick={() => setProfileOpen(false)} />
+                    <motion.div
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 z-20 mt-2 w-48 overflow-hidden rounded-xl border border-slate-100 bg-white py-1.5 shadow-lg"
+                    >
+                      <div className="border-b border-slate-100 px-4 py-2.5">
+                        <p className="truncate text-sm font-semibold text-slate-800">{user.name}</p>
+                        <p className="truncate text-xs text-slate-400">{user.email}</p>
+                      </div>
+                      <Link
+                        href="/packages/manage"
+                        onClick={() => setProfileOpen(false)}
+                        className="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50"
+                      >
+                        My packages
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="flex w-full items-center gap-2 px-4 py-2 text-sm font-medium text-red-500 hover:bg-red-50"
+                      >
+                        <FiLogOut className="h-4 w-4" /> Log out
+                      </button>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
+          ) : (
+            <>
+              <Link href="/login" className="px-4 py-2 text-[15px] font-medium text-slate-600 hover:text-slate-900">
+                Log in
+              </Link>
+              <Link href="/register" className="px-4 py-2">
+                <Button variant="primary" className="rounded-full">
+                  Sign up free
+                </Button>
+              </Link>
+            </>
+          )}
         </div>
 
         <button
@@ -70,20 +150,53 @@ export default function Navbar() {
                   {link.label}
                 </Link>
               ))}
-              <div className="flex gap-3 pt-2">
-                <Link
-                  href="/login"
-                  className="flex-1 rounded-full border border-slate-200 py-2 text-center font-semibold"
-                >
-                  Log in
-                </Link>
-                <Link
-                  href="/register"
-                  className="flex-1 rounded-full bg-brand-emerald py-2 text-center font-semibold text-white"
-                >
-                  Sign up
-                </Link>
-              </div>
+
+              {user ? (
+                <div className="border-t border-slate-100 pt-3">
+                  <div className="mb-3 flex items-center gap-3">
+                    {user.image ? (
+                      <Image
+                        src={user.image}
+                        alt={user.name ?? "Profile"}
+                        width={36}
+                        height={36}
+                        className="h-9 w-9 rounded-full object-cover"
+                      />
+                    ) : (
+                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-emerald text-sm font-semibold text-white">
+                        {user.name?.charAt(0).toUpperCase() ?? "U"}
+                      </span>
+                    )}
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-slate-800">{user.name}</p>
+                      <p className="truncate text-xs text-slate-400">{user.email}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="flex w-full items-center justify-center gap-2 rounded-full border border-red-200 py-2 text-sm font-semibold text-red-500"
+                  >
+                    <FiLogOut className="h-4 w-4" /> Log out
+                  </button>
+                </div>
+              ) : (
+                <div className="flex gap-3 pt-2">
+                  <Link
+                    href="/login"
+                    className="flex-1 rounded-full border border-slate-200 py-2 text-center font-semibold"
+                    onClick={() => setOpen(false)}
+                  >
+                    Log in
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="flex-1 rounded-full bg-brand-emerald py-2 text-center font-semibold text-white"
+                    onClick={() => setOpen(false)}
+                  >
+                    Sign up
+                  </Link>
+                </div>
+              )}
             </div>
           </motion.div>
         )}

@@ -10,6 +10,8 @@ import AuthLayout from "@/src/components/auth/AuthLayout";
 import AuthField from "@/src/components/auth/AuthField";
 import { isValidEmail, isValidUrl, isStrongPassword } from "@/src/lib/validation";
 import { authClient } from "@/src/lib/auth-client";
+import toast from "react-hot-toast";
+
 
 interface FormErrors {
   name?: string;
@@ -45,28 +47,31 @@ export default function RegisterPage() {
     return Object.keys(nextErrors).length === 0;
   }
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    if (!validate()) return;
+async function handleSubmit(e: FormEvent) {
+  e.preventDefault();
+  if (!validate()) return;
 
-    setLoading(true);
-    setFormError(null);
+  setLoading(true);
+  setFormError(null);
 
-    const { data, error } = await authClient.signUp.email({
-    email: "email@domain.com", // required
-    name: "Test User", // required
-    password: "password1234", // required
-    imageUrl: "https://example.com/photo.jpg", // optional
-    // username: "test",
-    // displayUsername: "Test User123",
-});
+  const { error } = await authClient.signUp.email({
+    email,
+    name,
+    password,
+    image: imageUrl || undefined,
+  });
 
+  setLoading(false);
 
-    // TODO: replace with your real signup call — body: { name, email, imageUrl, password }
-    await new Promise((resolve) => setTimeout(resolve, 900));
-    setLoading(false);
-    router.push("/login");
+  if (error) {
+    toast.error(error.message ?? "Something went wrong. Please try again.");
+    setFormError(error.message ?? "Something went wrong. Please try again.");
+    return;
   }
+
+  toast.success(`Welcome to TravelGo, ${name}!`);
+  router.push("/");
+}
 
  function handleGoogleAuth() {
   authClient.signIn.social({
