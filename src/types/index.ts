@@ -25,6 +25,10 @@ export interface Testimonial {
 export interface BlogPost {
   id: string;
   title: string;
+  excerpt: string;
+  category: "Packing" | "Trip Planning" | "Solo Travel" | "Budget Travel" | "Destinations";
+  author: string;
+  date: string;
   readTime: string;
   slug: string;
   image: string;
@@ -41,4 +45,18 @@ export interface StatItem {
   id: string;
   label: string;
   value: string;
+}
+export interface TeamMember {
+  id: string;
+  name: string;
+  role: string;
+  image: string;
+  bio: string;
+}
+
+export interface Milestone {
+  id: string;
+  year: string;
+  title: string;
+  description: string;
 }

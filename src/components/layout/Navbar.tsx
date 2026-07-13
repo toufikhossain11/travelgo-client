@@ -3,27 +3,38 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@heroui/react";
 import { FiChevronDown, FiCompass, FiLogOut, FiMenu, FiX } from "react-icons/fi";
 import toast from "react-hot-toast";
 import { authClient } from "@/src/lib/auth-client";
 
-const navLinks = [
+const baseLinks = [
   { label: "Home", href: "/" },
   { label: "Explore", href: "/explore" },
-  { label: "Trip packages", href: "/packages" },
   { label: "Blog", href: "/blog" },
   { label: "About", href: "/about" },
 ];
 
+const authOnlyLinks = [
+  { label: "Add package", href: "/packages/add" },
+  { label: "Manage packages", href: "/packages/manage" },
+];
+
+function isLinkActive(pathname: string, href: string) {
+  return href === "/" ? pathname === "/" : pathname.startsWith(href);
+}
+
 export default function Navbar() {
   const router = useRouter();
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const { data: session, isPending } = authClient.useSession();
   const user = session?.user;
+
+  const navLinks = user ? [...baseLinks, ...authOnlyLinks] : baseLinks;
 
   async function handleLogout() {
     await authClient.signOut();
@@ -44,12 +55,28 @@ export default function Navbar() {
           TravelGo
         </Link>
 
-        <nav className="hidden items-center gap-8 text-[15px] font-medium text-slate-600 lg:flex">
-          {navLinks.map((link) => (
-            <Link key={link.href} href={link.href} className="transition hover:text-slate-900">
-              {link.label}
-            </Link>
-          ))}
+        <nav className="hidden items-center gap-7 text-[15px] font-medium text-slate-600 lg:flex">
+          {navLinks.map((link) => {
+            const active = isLinkActive(pathname, link.href);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`relative whitespace-nowrap pb-1 transition ${
+                  active ? "text-slate-900" : "hover:text-slate-900"
+                }`}
+              >
+                {link.label}
+                {active && (
+                  <motion.span
+                    layoutId="nav-underline"
+                    className="absolute -bottom-1 left-0 right-0 h-0.5 rounded-full bg-brand-emerald"
+                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                  />
+                )}
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="hidden items-center gap-3 lg:flex">
@@ -81,7 +108,6 @@ export default function Navbar() {
               <AnimatePresence>
                 {profileOpen && (
                   <>
-                    {/* backdrop to close on outside click */}
                     <div className="fixed inset-0 z-10" onClick={() => setProfileOpen(false)} />
                     <motion.div
                       initial={{ opacity: 0, y: -8 }}
@@ -94,13 +120,6 @@ export default function Navbar() {
                         <p className="truncate text-sm font-semibold text-slate-800">{user.name}</p>
                         <p className="truncate text-xs text-slate-400">{user.email}</p>
                       </div>
-                      <Link
-                        href="/packages/manage"
-                        onClick={() => setProfileOpen(false)}
-                        className="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50"
-                      >
-                        My packages
-                      </Link>
                       <button
                         onClick={handleLogout}
                         className="flex w-full items-center gap-2 px-4 py-2 text-sm font-medium text-red-500 hover:bg-red-50"
@@ -144,15 +163,25 @@ export default function Navbar() {
             transition={{ duration: 0.25, ease: "easeInOut" }}
             className="overflow-hidden border-t border-slate-100 bg-white lg:hidden"
           >
-            <div className="space-y-3 px-5 py-4 font-medium text-slate-700">
-              {navLinks.map((link) => (
-                <Link key={link.href} href={link.href} className="block py-1" onClick={() => setOpen(false)}>
-                  {link.label}
-                </Link>
-              ))}
+            <div className="space-y-1 px-5 py-4 font-medium text-slate-700">
+              {navLinks.map((link) => {
+                const active = isLinkActive(pathname, link.href);
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setOpen(false)}
+                    className={`block rounded-lg px-2.5 py-2 transition ${
+                      active ? "bg-brand-emerald/10 font-semibold text-brand-emerald-dark" : "hover:bg-slate-50"
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
 
               {user ? (
-                <div className="border-t border-slate-100 pt-3">
+                <div className="mt-2 border-t border-slate-100 pt-3">
                   <div className="mb-3 flex items-center gap-3">
                     {user.image ? (
                       <Image
@@ -180,7 +209,7 @@ export default function Navbar() {
                   </button>
                 </div>
               ) : (
-                <div className="flex gap-3 pt-2">
+                <div className="mt-2 flex gap-3 border-t border-slate-100 pt-3">
                   <Link
                     href="/login"
                     className="flex-1 rounded-full border border-slate-200 py-2 text-center font-semibold"
