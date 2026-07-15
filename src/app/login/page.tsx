@@ -3,14 +3,24 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Button, Checkbox, Label } from "@heroui/react";
+import { Button } from "@heroui/react";
 import { FiEye, FiEyeOff, FiLock, FiMail } from "react-icons/fi";
 import { FaGoogle } from "react-icons/fa6";
 import AuthLayout from "@/src/components/auth/AuthLayout";
 import AuthField from "@/src/components/auth/AuthField";
 import { isValidEmail } from "@/src/lib/validation";
-import { authClient } from "@/src/lib/auth-client";
+import { auth } from "@/src/lib/firebase";
+import {
+  signInWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup,
+} from "firebase/auth";
+
 import toast from "react-hot-toast";
+
+// TODO: create this account once in Firebase Console (Authentication → Users → Add user)
+// so the demo button always logs in successfully
+const DEMO_CREDENTIALS = { email: "demo@travelgo.com", password: "Demo@1234" };
 
 interface FormErrors {
   email?: string;
@@ -21,11 +31,11 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [remember, setRemember] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(false);
 
   function validate(): boolean {
     const nextErrors: FormErrors = {};
@@ -37,30 +47,46 @@ export default function LoginPage() {
     return Object.keys(nextErrors).length === 0;
   }
 
-  async function handleSubmit(e: FormEvent) {
-  e.preventDefault();
-  if (!validate()) return;
-
-  setLoading(true);
-  setFormError(null);
-
-  const { error } = await authClient.signIn.email({ email, password });
-
-  setLoading(false);
-
-  if (error) {
-    toast.error(error.message ?? "Invalid email or password.");
-    setFormError(error.message ?? "Invalid email or password.");
-    return;
+  async function performLogin(emailValue: string, passwordValue: string) {
+    setFormError(null);
+    try {
+      await signInWithEmailAndPassword(auth, emailValue, passwordValue);
+      toast.success("Logged in successfully!");
+      router.push("/");
+    } catch (error: unknown) {
+      toast.error((error as { message: string }).message);
+      setFormError((error as { message: string }).message);
+    }
   }
 
-  toast.success("Logged in successfully!");
-  router.push("/");
-}
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    if (!validate()) return;
 
-function handleGoogleAuth() {
-  authClient.signIn.social({ provider: "google", callbackURL: "/" });
-}
+    setLoading(true);
+    await performLogin(email, password);
+    setLoading(false);
+  }
+
+  async function handleDemoLogin() {
+    setDemoLoading(true);
+    setEmail(DEMO_CREDENTIALS.email);
+    setPassword(DEMO_CREDENTIALS.password);
+    setErrors({});
+    await performLogin(DEMO_CREDENTIALS.email, DEMO_CREDENTIALS.password);
+    setDemoLoading(false);
+  }
+
+  async function handleGoogleAuth() {
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+      toast.success("Logged in successfully!");
+      router.push("/");
+    } catch (error: unknown) {
+      toast.error((error as { message: string }).message);
+    }
+  }
 
   return (
     <AuthLayout heading="Welcome back" subheading="Log in to manage your bookings and saved trips.">
@@ -103,28 +129,24 @@ function handleGoogleAuth() {
           }
         />
 
-        <div className="flex items-center justify-between text-xs">
-          <Checkbox id="remember" isSelected={remember} onChange={setRemember}>
-            <Checkbox.Control>
-              <Checkbox.Indicator />
-            </Checkbox.Control>
-            <Checkbox.Content>
-              <Label htmlFor="remember" className="text-xs text-slate-600">
-                Remember me
-              </Label>
-            </Checkbox.Content>
-          </Checkbox>
-          <Link href="/forgot-password" className="font-medium text-brand-emerald-dark hover:underline">
-            Forgot password?
-          </Link>
-        </div>
-
         {formError && (
           <p className="rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-600">{formError}</p>
         )}
 
-        <Button type="submit" variant="primary" size="sm" fullWidth isDisabled={loading} className="h-10">
+        <Button type="submit" variant="primary" size="sm" fullWidth isDisabled={loading || demoLoading} className="h-10">
           {loading ? "Logging in…" : "Log in"}
+        </Button>
+
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          fullWidth
+          isDisabled={loading || demoLoading}
+          onPress={handleDemoLogin}
+          className="h-10 border-dashed border-brand-sky/60 !text-brand-sky-dark"
+        >
+          {demoLoading ? "Logging in with demo account…" : "Use demo login"}
         </Button>
       </form>
 

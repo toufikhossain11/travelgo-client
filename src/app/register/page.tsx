@@ -3,22 +3,28 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Button, Checkbox, Label } from "@heroui/react";
+import { Button } from "@heroui/react";
 import { FiEye, FiEyeOff, FiImage, FiLock, FiMail, FiUser } from "react-icons/fi";
 import { FaGoogle } from "react-icons/fa6";
 import AuthLayout from "@/src/components/auth/AuthLayout";
 import AuthField from "@/src/components/auth/AuthField";
 import { isValidEmail, isValidUrl, isStrongPassword } from "@/src/lib/validation";
-import { authClient } from "@/src/lib/auth-client";
+import { getErrorMessage } from "@/src/lib/getErrorMessage";
 import toast from "react-hot-toast";
 
+import { auth } from "@/src/lib/firebase";
+import {
+  createUserWithEmailAndPassword,
+  updateProfile,
+  GoogleAuthProvider,
+  signInWithPopup,
+} from "firebase/auth";
 
 interface FormErrors {
   name?: string;
   email?: string;
   imageUrl?: string;
   password?: string;
-  terms?: string;
 }
 
 export default function RegisterPage() {
@@ -27,7 +33,6 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [password, setPassword] = useState("");
-  const [agreed, setAgreed] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
@@ -42,43 +47,46 @@ export default function RegisterPage() {
     if (!password) nextErrors.password = "Password is required";
     else if (!isStrongPassword(password))
       nextErrors.password = "At least 8 characters, with a letter and a number";
-    if (!agreed) nextErrors.terms = "You must accept the terms to continue";
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   }
 
-async function handleSubmit(e: FormEvent) {
-  e.preventDefault();
-  if (!validate()) return;
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    if (!validate()) return;
 
-  setLoading(true);
-  setFormError(null);
+    setLoading(true);
+    setFormError(null);
 
-  const { error } = await authClient.signUp.email({
-    email,
-    name,
-    password,
-    image: imageUrl || undefined,
-  });
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
 
-  setLoading(false);
+      await updateProfile(userCredential.user, {
+        displayName: name,
+        photoURL: imageUrl || null,
+      });
 
-  if (error) {
-    toast.error(error.message ?? "Something went wrong. Please try again.");
-    setFormError(error.message ?? "Something went wrong. Please try again.");
-    return;
+      toast.success(`Welcome to TravelGo, ${name}!`);
+      router.push("/");
+    } catch (error) {
+      const message = getErrorMessage(error);
+      toast.error(message);
+      setFormError(message);
+    } finally {
+      setLoading(false);
+    }
   }
 
-  toast.success(`Welcome to TravelGo, ${name}!`);
-  router.push("/");
-}
-
- function handleGoogleAuth() {
-  authClient.signIn.social({
-    provider: "google",
-    callbackURL: "/",
-  });
-}
+  async function handleGoogleAuth() {
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+      toast.success("Login Successful");
+      router.push("/");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  }
 
   return (
     <AuthLayout heading="Create your account" subheading="Save trips, track bookings and get personalized deals.">
@@ -159,23 +167,6 @@ async function handleSubmit(e: FormEvent) {
             </Button>
           }
         />
-
-        <div>
-          <Checkbox id="terms" isSelected={agreed} onChange={setAgreed} isInvalid={Boolean(errors.terms)}>
-            <Checkbox.Control>
-              <Checkbox.Indicator />
-            </Checkbox.Control>
-            <Checkbox.Content>
-              <Label htmlFor="terms" className="text-xs text-slate-600">
-                I agree to TravelGo&apos;s{" "}
-                <Link href="/privacy" className="font-medium text-brand-emerald-dark hover:underline">
-                  Terms &amp; Privacy Policy
-                </Link>
-              </Label>
-            </Checkbox.Content>
-          </Checkbox>
-          {errors.terms && <p className="mt-1 text-[11px] font-medium text-red-500">{errors.terms}</p>}
-        </div>
 
         {formError && (
           <p className="rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-600">{formError}</p>

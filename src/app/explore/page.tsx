@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import DestinationCard from "@/src/components/shared/DestinationCard";
 import ExploreFilters from "@/src/components/explore/ExploreFilters";
@@ -31,9 +31,12 @@ function ExplorePageContent() {
   const [sortBy, setSortBy] = useState<SortOption>("relevance");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
-  useEffect(() => {
+  // effect ছাড়াই — filters/sort বদলালে render-এর সময়ই visibleCount reset হয়ে যায়
+  const [trackedKey, setTrackedKey] = useState({ applied, sortBy });
+  if (trackedKey.applied !== applied || trackedKey.sortBy !== sortBy) {
+    setTrackedKey({ applied, sortBy });
     setVisibleCount(PAGE_SIZE);
-  }, [applied, sortBy]);
+  }
 
   const results = useMemo(() => {
     const filtered = filterDestinations(destinations, applied);

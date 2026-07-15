@@ -6,6 +6,7 @@ import { Button, Card } from "@heroui/react";
 import { FiStar, FiClock, FiMapPin } from "react-icons/fi";
 import { Destination } from "@/src/types";
 import { scaleIn } from "@/src/lib/motion";
+import Link from "next/link";
 
 
 interface DestinationCardProps {
@@ -59,10 +60,11 @@ export default function DestinationCard({ destination, index = 0 }: DestinationC
               <FiClock className="h-3.5 w-3.5" /> {reviewCount} reviews
             </span>
           </div>
-
+          <Link  href={`/packages/${destination.id}`} className="mt-auto">
           <Button variant="secondary" className="mt-4 w-full rounded-xl">
             View details
           </Button>
+          </Link>
         </Card.Content>
       </Card>
     </motion.div>

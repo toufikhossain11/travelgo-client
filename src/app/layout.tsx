@@ -4,6 +4,7 @@ import { Toaster } from "react-hot-toast";
 import "./globals.css";
 import Navbar from "../components/layout/Navbar";
 import Footer from "../components/layout/Footer";
+import { AuthProvider } from "../context/AuthContext";
 
 const sora = Sora({
   subsets: ["latin"],
@@ -29,16 +30,24 @@ export const metadata: Metadata = {
     "Search, compare and book curated tour packages from local experts across 40+ countries.",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <html lang="en" className={`${sora.variable} ${inter.variable} ${plexMono.variable}`} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${sora.variable} ${inter.variable} ${plexMono.variable}`}
+      suppressHydrationWarning
+    >
       <body className="antialiased">
-        {/* HeroUI v3 needs no provider wrapper */}
-        <Navbar />
-        {children}
-        <Footer />
-        <Toaster position="top-center" />
-
+        <AuthProvider>
+          <Navbar />
+          {children}
+          <Footer />
+          <Toaster position="top-center" />
+        </AuthProvider>
       </body>
     </html>
   );

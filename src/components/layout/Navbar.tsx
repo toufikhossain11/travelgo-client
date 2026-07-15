@@ -8,7 +8,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@heroui/react";
 import { FiChevronDown, FiCompass, FiLogOut, FiMenu, FiX } from "react-icons/fi";
 import toast from "react-hot-toast";
-import { authClient } from "@/src/lib/auth-client";
+import { useAuth } from "@/src/context/AuthContext";
 
 const baseLinks = [
   { label: "Home", href: "/" },
@@ -18,8 +18,8 @@ const baseLinks = [
 ];
 
 const authOnlyLinks = [
-  { label: "Add package", href: "/packages/add" },
-  { label: "Manage packages", href: "/packages/manage" },
+  { label: "Add Package", href: "/packages/add" },
+  { label: "Manage Packages", href: "/packages/manage" },
 ];
 
 function isLinkActive(pathname: string, href: string) {
@@ -31,19 +31,19 @@ export default function Navbar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const { data: session, isPending } = authClient.useSession();
-  const user = session?.user;
-
+const { user, loading, logout } = useAuth();
   const navLinks = user ? [...baseLinks, ...authOnlyLinks] : baseLinks;
 
   async function handleLogout() {
-    await authClient.signOut();
-    setProfileOpen(false);
-    setOpen(false);
-    toast.success("Logged out successfully");
-    router.push("/");
-    router.refresh();
-  }
+  await logout();
+
+  toast.success("Logged out successfully");
+
+  setProfileOpen(false);
+  setOpen(false);
+
+  router.push("/");
+}
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-slate-100 bg-white/90 backdrop-blur">
@@ -80,7 +80,7 @@ export default function Navbar() {
         </nav>
 
         <div className="hidden items-center gap-3 lg:flex">
-          {isPending ? (
+          {loading ? (
             <div className="h-9 w-9 animate-pulse rounded-full bg-slate-200" />
           ) : user ? (
             <div className="relative">
@@ -88,20 +88,20 @@ export default function Navbar() {
                 onClick={() => setProfileOpen((v) => !v)}
                 className="flex items-center gap-2 rounded-full py-1 pl-1 pr-3 transition hover:bg-slate-50"
               >
-                {user.image ? (
+                {user.photoURL ? (
                   <Image
-                    src={user.image}
-                    alt={user.name ?? "Profile"}
+                    src={user.photoURL}
+                    alt={user.displayName ?? "Profile"}
                     width={32}
                     height={32}
                     className="h-8 w-8 rounded-full object-cover"
                   />
                 ) : (
                   <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-emerald text-sm font-semibold text-white">
-                    {user.name?.charAt(0).toUpperCase() ?? "U"}
+                    {user.displayName?.charAt(0).toUpperCase() ?? "U"}
                   </span>
                 )}
-                <span className="max-w-[120px] truncate text-sm font-medium text-slate-700">{user.name}</span>
+                <span className="max-w-[120px] truncate text-sm font-medium text-slate-700">{user.displayName}</span>
                 <FiChevronDown className={`h-4 w-4 text-slate-400 transition ${profileOpen ? "rotate-180" : ""}`} />
               </button>
 
@@ -117,7 +117,7 @@ export default function Navbar() {
                       className="absolute right-0 z-20 mt-2 w-48 overflow-hidden rounded-xl border border-slate-100 bg-white py-1.5 shadow-lg"
                     >
                       <div className="border-b border-slate-100 px-4 py-2.5">
-                        <p className="truncate text-sm font-semibold text-slate-800">{user.name}</p>
+                        <p className="truncate text-sm font-semibold text-slate-800">{user.displayName}</p>
                         <p className="truncate text-xs text-slate-400">{user.email}</p>
                       </div>
                       <button
@@ -183,21 +183,21 @@ export default function Navbar() {
               {user ? (
                 <div className="mt-2 border-t border-slate-100 pt-3">
                   <div className="mb-3 flex items-center gap-3">
-                    {user.image ? (
+                    {user.photoURL ? (
                       <Image
-                        src={user.image}
-                        alt={user.name ?? "Profile"}
+                        src={user.photoURL!}
+                        alt={user.displayName ?? "Profile"}
                         width={36}
                         height={36}
                         className="h-9 w-9 rounded-full object-cover"
                       />
                     ) : (
                       <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-emerald text-sm font-semibold text-white">
-                        {user.name?.charAt(0).toUpperCase() ?? "U"}
+                        {user.displayName?.charAt(0).toUpperCase() ?? "U"}
                       </span>
                     )}
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-slate-800">{user.name}</p>
+                      <p className="truncate text-sm font-semibold text-slate-800">{user.displayName}</p>
                       <p className="truncate text-xs text-slate-400">{user.email}</p>
                     </div>
                   </div>
