@@ -2,11 +2,12 @@ import type { Destination } from "@/src/types";
 
 export interface ExploreFilters {
   search: string;
-  category: string; // "all" or a TourCategory id (e.g. "beach")
+  category: string;
   minPrice: number | null;
   maxPrice: number | null;
+  minDuration?: number | null;
+  maxDuration?: number | null;
 }
-
 export type SortOption = "relevance" | "price-asc" | "price-desc" | "rating-desc";
 
 export function filterDestinations(items: Destination[], filters: ExploreFilters): Destination[] {
@@ -26,8 +27,10 @@ export function filterDestinations(items: Destination[], filters: ExploreFilters
 
     if (filters.minPrice !== null && item.price < filters.minPrice) return false;
     if (filters.maxPrice !== null && item.price > filters.maxPrice) return false;
+    if (filters.minDuration != null && item.durationDays < filters.minDuration) return false;
+    if (filters.maxDuration != null && item.durationDays > filters.maxDuration) return false;
 
-    return true;
+     return true;
   });
 }
 

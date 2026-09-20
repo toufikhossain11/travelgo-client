@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import DestinationCard from "@/src/components/shared/DestinationCard";
 import ExploreFilters from "@/src/components/explore/ExploreFilters";
 import SortDropdown from "@/src/components/explore/SortDropdown";
+import AISearchBar from "@/src/components/explore/AISearchBar";
 import { destinations } from "@/src/data/destinations";
 import {
   filterDestinations,
@@ -20,6 +21,8 @@ const emptyFilters: ExploreFiltersType = {
   category: "all",
   minPrice: null,
   maxPrice: null,
+  minDuration: null,
+  maxDuration: null,
 };
 
 function ExplorePageContent() {
@@ -46,6 +49,15 @@ function ExplorePageContent() {
   const visibleResults = results.slice(0, visibleCount);
   const hasMore = visibleCount < results.length;
 
+  function handleAIParsed(parsedFilters: Partial<ExploreFiltersType>) {
+    const merged: ExploreFiltersType = {
+      ...emptyFilters,
+      ...parsedFilters,
+    };
+    setDraft(merged);
+    setApplied(merged);
+  }
+
   return (
     <main className="mx-auto max-w-7xl px-5 py-10 md:px-8 md:py-14">
       <div className="mb-8">
@@ -57,6 +69,8 @@ function ExplorePageContent() {
           Search and filter {destinations.length}+ curated tour packages across 40+ countries.
         </p>
       </div>
+
+      <AISearchBar onParsed={handleAIParsed} />
 
       <ExploreFilters
         draft={draft}

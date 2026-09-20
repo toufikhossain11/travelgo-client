@@ -8,7 +8,7 @@ import IncludedExcluded from "@/src/components/package-details/IncludedExcluded"
 import Itinerary from "@/src/components/package-details/Itinerary";
 import MapSection from "@/src/components/package-details/MapSection";
 import Reviews from "@/src/components/package-details/Reviews";
-import RelatedPackages from "@/src/components/package-details/RelatedPackages";
+import AIRelatedPackages from "@/src/components/package-details/AIRelatedPackages";
 import FAQSection from "@/src/components/package-details/FAQSection";
 import BookingCTA from "@/src/components/package-details/BookingCTA";
 
@@ -37,7 +37,7 @@ export default async function PackagePage({ params }: PackagePageProps) {
         <MapSection location={pkg.location} country={pkg.country} />
         <Reviews rating={pkg.rating} reviewCount={pkg.reviewCount} reviews={pkg.reviews} />
       </div>
-      <RelatedPackages currentId={pkg.id} category={pkg.category} />
+      <AIRelatedPackages currentId={pkg.id} category={pkg.category} />
       <div className="mx-auto max-w-7xl px-5 md:px-8">
         <FAQSection faqs={pkg.faqs} />
       </div>
