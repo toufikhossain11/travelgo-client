@@ -5,7 +5,7 @@ import "./globals.css";
 import Navbar from "../components/layout/Navbar";
 import Footer from "../components/layout/Footer";
 import { AuthProvider } from "../context/AuthContext";
-
+import ChatWidget from "@/src/components/ai/ChatWidget";
 const sora = Sora({
   subsets: ["latin"],
   variable: "--font-display",
@@ -46,6 +46,7 @@ export default function RootLayout({
           <Navbar />
           {children}
           <Footer />
+          <ChatWidget />
           <Toaster position="top-center" />
         </AuthProvider>
       </body>

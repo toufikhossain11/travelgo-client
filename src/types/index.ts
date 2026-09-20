@@ -123,3 +123,8 @@ export interface LocalPackage {
   createdByName: string;
   createdAt: string;
 }
+export interface ChatMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+}
